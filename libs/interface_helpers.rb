@@ -1,9 +1,9 @@
 # Interface helpers module
 module InterfaceHelpers
   def title(text)
-    result = "+#{'-'*text.size}+\n"
+    result = "+#{'-' * text.size}+\n"
     result << wrapped_line(text, '|')
-    result << "\n+#{'-'*text.size}+\n"
+    result << "\n+#{'-' * text.size}+\n"
   end
 
   def wrapped_line(text, wrap)

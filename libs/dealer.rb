@@ -8,6 +8,5 @@ class Dealer < Player
     super 'Dealer'
   end
 
-  def move(deck)
-  end
+  def move(deck); end
 end
