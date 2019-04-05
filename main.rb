@@ -1,10 +1,15 @@
-require_relative 'libs/errors'
+require_relative 'libs/exceptions'
+require_relative 'libs/validation'
+require_relative 'libs/card'
+require_relative 'libs/deck'
 require_relative 'libs/player'
+require_relative 'libs/dealer'
 require_relative 'libs/interface_helpers'
 
 # Main class of the game
 class Blackjack
-  include Errors
+  include InterfaceHelpers
+  include Exceptions
 
   attr_accessor :deck, :player, :dealer
 
@@ -27,6 +32,7 @@ class Blackjack
       @player = Player.new(name)
     end
     @dealer = Dealer.new
+    @deck = Deck.new
   end
 
   def start_game
@@ -38,19 +44,47 @@ class Blackjack
     @player.release_cards(@deck)
     @dealer.release_cards(@deck)
     @open_cards = false
-    @player.take_cards(@deck, 2)
-    @dealer.take_cards(@deck, 2)
+    @player.take_card(@deck, 2)
+    @dealer.take_card(@deck, 2)
   end
 
   def game
     loop do
       setup_new_game
       loop do
+        make_bets
         break if game_round
       end
-      update_score_and_print
+      round_end
+
       break if ask('Вы хотите продолжить?(Д/н)').downcase.first == 'н'
     end
+  end
+
+  def make_bets
+    @jackpot = 0
+    @jackpot += @player.bet
+    @jackpot += @dealer.bet
+  end
+
+  def round_end
+    winner = who_win
+    winner.score += @jackpot if winner
+    split_jackpot unless winner
+    print_congratulation(winner, @player, @dealer)
+    @jackpot = 0
+  end
+
+  def split_jackpot
+    @player.score += (@jackpot / 2)
+    @dealer.score += (@jackpot / 2)
+  end
+
+  def who_win
+    return @player if @player.points > @dealer.points
+    return @dealer if @player.points < @dealer.points
+
+    nil
   end
 
   def game_round
@@ -58,8 +92,8 @@ class Blackjack
     print_player_status(@player)
     choose = player_choose
     @open_cards = true if choose == :open_cards
-    @player.take_card if choose == :take_card
-    @dealer.move unless @open_cards
+    @player.take_card(@deck) if choose == :take_card
+    @dealer.move(@deck) unless @open_cards
     three_cards = @player.cards.size == 3 && @dealer.cards.size == 3
     @open_cards || three_cards
   end
@@ -69,8 +103,6 @@ class Blackjack
       return :open_cards if char == 'о'
       return :take_card if char == 'в'
       return :skip if char == 'п'
-
-      return nil
     end
   end
 

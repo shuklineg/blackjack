@@ -1,10 +1,11 @@
 # exception catching module
 module Exceptions
-  NameIsEmpty = Class.new(StandardError)
+  IsEmpty = Class.new(StandardError)
+  NotEnoughMoney = Class.new(StandardError)
 
   def with_name_is_empty_handling
     yield
-  rescue NameIsEmpty => e
+  rescue Exceptions::IsEmpty => e
     puts e.message
     retry
   end
