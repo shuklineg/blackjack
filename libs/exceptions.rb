@@ -3,7 +3,7 @@ module Exceptions
   IsEmpty = Class.new(StandardError)
   NotEnoughMoney = Class.new(StandardError)
 
-  def with_name_is_empty_handling
+  def with_is_empty_handling
     yield
   rescue Exceptions::IsEmpty => e
     puts e.message

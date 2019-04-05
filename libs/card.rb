@@ -8,4 +8,8 @@ class Card
     @points = [@points] unless @points.is_a? Array
     @fase = face
   end
+
+  def to_s
+    "#{@suit} #{@fase}"
+  end
 end

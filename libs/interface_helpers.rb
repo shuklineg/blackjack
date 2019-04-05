@@ -16,11 +16,21 @@ module InterfaceHelpers
   end
 
   def print_dealer_status(dealer)
-    # TODO: print dealer status
+    puts "Игрок #{dealer.name}"
+    puts "\tсчет #{dealer.score}"
+    puts "\tкарт #{dealer.cards.size}"
   end
 
   def print_player_status(player)
-    # TODO: print player status
+    print_dealer_status(player)
+    puts "\tочков #{player.points}"
+    puts "\Карты:"
+    player.cards.each { |card| puts "\t\t#{card}" }
+  end
+
+  def print_congratulation(winner)
+    puts "Выиграл #{winner.name}" if winner
+    puts 'Ничья' unless winner
   end
 
   def get_one_char(prompt)
@@ -29,5 +39,23 @@ module InterfaceHelpers
     loop do
       break if yield(ask(prompt).downcase.chars.first)
     end
+  end
+
+  def print_score_table(*players)
+    scores = score_table(*players)
+    score_table(*players).keys.sort.reverse.each_with_index do |result, index|
+      puts "#{index + 1}. #{result} - #{scores[result].map(&:name).join(',')}"
+    end
+  end
+
+  private
+
+  def score_table(*players)
+    scores = {}
+    players.each do |some_player|
+      scores[some_player.score] ||= []
+      scores[some_player.score] << some_player
+    end
+    scores
   end
 end

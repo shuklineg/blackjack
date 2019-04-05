@@ -4,9 +4,11 @@ class Dealer < Player
 
   validate :name, :presence
 
-  def initialize
-    super 'Dealer'
+  def initialize(deck)
+    super 'Dealer', deck
   end
 
-  def move(deck); end
+  def move
+    take_card if points < 17 && @cards.size < 3
+  end
 end

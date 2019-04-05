@@ -27,37 +27,37 @@ class Blackjack
   end
 
   def setup_players
-    with_name_is_empty_handling do
+    with_is_empty_handling do
       name = ask('Ведите свое имя?')
-      @player = Player.new(name)
+      @player = Player.new(name, @deck)
     end
-    @dealer = Dealer.new
-    @deck = Deck.new
+    @dealer = Dealer.new(@deck)
   end
 
   def start_game
     greetins
+    @deck = Deck.new
     setup_players
   end
 
   def setup_new_game
-    @player.release_cards(@deck)
-    @dealer.release_cards(@deck)
+    @player.release_cards
+    @dealer.release_cards
     @open_cards = false
-    @player.take_card(@deck, 2)
-    @dealer.take_card(@deck, 2)
+    @player.take_card(2)
+    @dealer.take_card(2)
   end
 
   def game
     loop do
+      break unless make_bets
+
       setup_new_game
       loop do
-        make_bets
         break if game_round
       end
       round_end
-
-      break if ask('Вы хотите продолжить?(Д/н)').downcase.first == 'н'
+      break if ask('Вы хотите продолжить?(Д/н)').downcase.chars.first == 'н'
     end
   end
 
@@ -65,14 +65,20 @@ class Blackjack
     @jackpot = 0
     @jackpot += @player.bet
     @jackpot += @dealer.bet
+    true
+  rescue NotEnoughMoney => e
+    puts e.message
+    false
   end
 
   def round_end
     winner = who_win
     winner.score += @jackpot if winner
     split_jackpot unless winner
-    print_congratulation(winner, @player, @dealer)
     @jackpot = 0
+    print_player_status(@dealer)
+    print_player_status(@player)
+    print_congratulation(winner)
   end
 
   def split_jackpot
@@ -92,14 +98,14 @@ class Blackjack
     print_player_status(@player)
     choose = player_choose
     @open_cards = true if choose == :open_cards
-    @player.take_card(@deck) if choose == :take_card
-    @dealer.move(@deck) unless @open_cards
+    @player.take_card if choose == :take_card
+    @dealer.move unless @open_cards
     three_cards = @player.cards.size == 3 && @dealer.cards.size == 3
     @open_cards || three_cards
   end
 
   def player_choose
-    get_one_char('Ваш ход: (В)зять/(Открыть)/(П)ропустить') do |char|
+    get_one_char('Ваш ход: (В)зять/(О)ткрыть/(П)ропустить') do |char|
       return :open_cards if char == 'о'
       return :take_card if char == 'в'
       return :skip if char == 'п'
