@@ -2,6 +2,7 @@ require_relative 'libs/errors'
 require_relative 'libs/player'
 require_relative 'libs/interface_helpers'
 
+# Main class of the game
 class Blackjack
   include Errors
 
@@ -13,39 +14,64 @@ class Blackjack
     end_game
   end
 
-  private 
+  private
 
-  def start_game
+  def greetins
     puts title('Blackjack')
-    puts wrapped_line('Добро пожаловать в игру!', '***')    
-    begin
+    puts wrapped_line('Добро пожаловать в игру!', '***')
+  end
+
+  def setup_players
+    with_name_is_empty_handling do
       name = ask('Ведите свое имя?')
       @player = Player.new(name)
-    rescue NotEmpty => e
-      puts e.message
-      retry
     end
     @dealer = Dealer.new
   end
 
+  def start_game
+    greetins
+    setup_players
+  end
+
+  def setup_new_game
+    @player.release_cards(@deck)
+    @dealer.release_cards(@deck)
+    @open_cards = false
+    @player.take_cards(@deck, 2)
+    @dealer.take_cards(@deck, 2)
+  end
+
   def game
     loop do
-      @open_cards = false
-      @player.take_cards(@deck, 2)
-      @dealer.take_cards(@deck, 2)      
+      setup_new_game
       loop do
-        break if turn
+        break if game_round
       end
+      update_score_and_print
       break if ask('Вы хотите продолжить?(Д/н)').downcase.first == 'н'
     end
   end
 
-  def turn
-    # TODO turn
-    show_player_status
-    # TODO choose
+  def game_round
+    print_dealer_status(@dealer)
+    print_player_status(@player)
+    choose = player_choose
+    @open_cards = true if choose == :open_cards
+    @player.take_card if choose == :take_card
+    @dealer.move unless @open_cards
     three_cards = @player.cards.size == 3 && @dealer.cards.size == 3
     @open_cards || three_cards
+  end
+
+  def player_choose
+    get_one_char('Ваш ход: (В)зять/(Открыть)/(П)ропустить') do |char|
+      return :open_cards if char == 'о'
+      return :take_card if char == 'в'
+      return :skip if char == 'п'
+
+      return nil
+    end
   end
 
   def end_game
