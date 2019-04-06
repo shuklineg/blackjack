@@ -2,6 +2,7 @@
 module Exceptions
   IsEmpty = Class.new(StandardError)
   NotEnoughMoney = Class.new(StandardError)
+  TooManyCards = Class.new(StandardError)
 
   def with_is_empty_handling
     yield

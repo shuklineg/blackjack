@@ -29,8 +29,8 @@ module InterfaceHelpers
   end
 
   def print_congratulation(winner)
-    puts "Выиграл #{winner.name}" if winner
-    puts 'Ничья' unless winner
+    puts wrapped_line('Результат партии', '***')
+    puts title(winner ? "Выиграл #{winner.name}" : 'Ничья')
   end
 
   def get_one_char(prompt)

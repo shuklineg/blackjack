@@ -73,9 +73,9 @@ class Blackjack
 
   def round_end
     winner = who_win
-    winner.score += @jackpot if winner
-    split_jackpot unless winner
+    winner ? winner.score += @jackpot : split_jackpot
     @jackpot = 0
+    puts wrapped_line('Открываем карты', '***')
     print_player_status(@dealer)
     print_player_status(@player)
     print_congratulation(winner)
@@ -96,9 +96,7 @@ class Blackjack
   def game_round
     print_dealer_status(@dealer)
     print_player_status(@player)
-    choose = player_choose
-    @open_cards = true if choose == :open_cards
-    @player.take_card if choose == :take_card
+    player_choose
     @dealer.move unless @open_cards
     three_cards = @player.cards.size == 3 && @dealer.cards.size == 3
     @open_cards || three_cards
@@ -106,13 +104,19 @@ class Blackjack
 
   def player_choose
     get_one_char('Ваш ход: (В)зять/(О)ткрыть/(П)ропустить') do |char|
-      return :open_cards if char == 'о'
-      return :take_card if char == 'в'
-      return :skip if char == 'п'
+      return @open_cards = true if char == 'о'
+      return true if char == 'п'
+
+      begin
+        return @player.take_card if char == 'в'
+      rescue TooManyCards => e
+        puts e.message
+      end
     end
   end
 
   def end_game
+    puts wrapped_line('Таблица результатов', '***')
     print_score_table(@player, @dealer)
     puts wrapped_line('Конец игры!', '***')
   end
