@@ -3,13 +3,13 @@ class Player
   include CardsExceptions
   include Validation
 
+  DEFAULT_SCORE = 100
+  DEFAULT_BET = 10
+
   attr_accessor :score
   attr_reader :name, :bet, :hand
 
   validate :name, :presence
-
-  DEFAULT_SCORE = 100
-  DEFAULT_BET = 10
 
   def initialize(name)
     @name = name

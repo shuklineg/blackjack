@@ -1,5 +1,7 @@
 # Player Hand implementation class
 class Hand
+  CARDS_MAX_COUNT = 3
+
   attr_accessor :cards
 
   def initialize
@@ -29,6 +31,6 @@ class Hand
   end
 
   def cards_max_count?
-    @cards.count >= 3
+    @cards.count >= CARDS_MAX_COUNT
   end
 end
