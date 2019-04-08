@@ -1,7 +1,8 @@
-require_relative 'libs/exceptions'
+require_relative 'libs/cards_exceptions'
 require_relative 'libs/validation'
 require_relative 'libs/card'
 require_relative 'libs/deck'
+require_relative 'libs/hand'
 require_relative 'libs/player'
 require_relative 'libs/dealer'
 require_relative 'libs/interface_helpers'
@@ -9,7 +10,7 @@ require_relative 'libs/interface_helpers'
 # Main class of the game
 class Blackjack
   include InterfaceHelpers
-  include Exceptions
+  include CardsExceptions
 
   attr_accessor :deck, :player, :dealer
 
@@ -29,9 +30,9 @@ class Blackjack
   def setup_players
     with_is_empty_handling do
       name = ask('Ведите свое имя?')
-      @player = Player.new(name, @deck)
+      @player = Player.new(name)
     end
-    @dealer = Dealer.new(@deck)
+    @dealer = Dealer.new
   end
 
   def start_game
@@ -41,11 +42,11 @@ class Blackjack
   end
 
   def setup_new_game
-    @player.release_cards
-    @dealer.release_cards
+    @player.hand.release_cards(@deck)
+    @dealer.hand.release_cards(@deck)
     @open_cards = false
-    @player.take_card(2)
-    @dealer.take_card(2)
+    @player.hand.take_card(@deck, 2)
+    @dealer.hand.take_card(@deck, 2)
   end
 
   def game
@@ -62,13 +63,14 @@ class Blackjack
   end
 
   def make_bets
+    puts "У #{@player.name} недостаточно средств" if @player.bankrupt?
+    puts "У #{@dealer.name} недостаточно средств" if @dealer.bankrupt?
+    return false if @player.bankrupt? || @dealer.bankrupt?
+
     @jackpot = 0
-    @jackpot += @player.bet
-    @jackpot += @dealer.bet
+    @jackpot += @player.make_bet
+    @jackpot += @dealer.make_bet
     true
-  rescue NotEnoughMoney => e
-    puts e.message
-    false
   end
 
   def round_end
@@ -87,8 +89,8 @@ class Blackjack
   end
 
   def who_win
-    return @player if @player.points > @dealer.points
-    return @dealer if @player.points < @dealer.points
+    return @player if @player.hand.max_points > @dealer.hand.max_points
+    return @dealer if @player.hand.max_points < @dealer.hand.max_points
 
     nil
   end
@@ -97,21 +99,19 @@ class Blackjack
     print_dealer_status(@dealer)
     print_player_status(@player)
     player_choose
-    @dealer.move unless @open_cards
-    three_cards = @player.cards.size == 3 && @dealer.cards.size == 3
+    @dealer.move(@deck) unless @open_cards
+    three_cards = @player.hand.cards.size == 3 && @dealer.hand.cards.size == 3
     @open_cards || three_cards
   end
 
   def player_choose
     get_one_char('Ваш ход: (В)зять/(О)ткрыть/(П)ропустить') do |char|
-      return @open_cards = true if char == 'о'
-      return true if char == 'п'
+      @open_cards = true if char == 'о'
+      puts 'Пропуск хода' if char == 'п'
+      puts 'Не больше 3х карт' if char == 'в' && !@player.hand.take_card(@deck)
+      return true if %w[о п в].include? char
 
-      begin
-        return @player.take_card if char == 'в'
-      rescue TooManyCards => e
-        puts e.message
-      end
+      false
     end
   end
 

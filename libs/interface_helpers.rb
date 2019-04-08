@@ -18,14 +18,14 @@ module InterfaceHelpers
   def print_dealer_status(dealer)
     puts "Игрок #{dealer.name}"
     puts "\tсчет #{dealer.score}"
-    puts "\tкарт #{dealer.cards.size}"
+    puts "\tкарт #{dealer.hand.cards.size}"
   end
 
   def print_player_status(player)
     print_dealer_status(player)
-    puts "\tочков #{player.points}"
+    puts "\tочков #{player.hand.max_points}"
     puts "\Карты:"
-    player.cards.each { |card| puts "\t\t#{card}" }
+    player.hand.cards.each { |card| puts "\t\t#{card}" }
   end
 
   def print_congratulation(winner)

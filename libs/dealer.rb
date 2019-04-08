@@ -4,11 +4,11 @@ class Dealer < Player
 
   validate :name, :presence
 
-  def initialize(deck)
-    super 'Dealer', deck
+  def initialize
+    super 'Dealer'
   end
 
-  def move
-    take_card if points < 17 && @cards.size < 3
+  def move(deck)
+    hand.take_card(deck) if hand.max_points < 17 && !hand.cards_max_count?
   end
 end

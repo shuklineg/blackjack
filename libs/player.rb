@@ -1,52 +1,32 @@
 # player class
 class Player
-  include Exceptions
+  include CardsExceptions
   include Validation
 
-  attr_accessor :score, :cards
-  attr_reader :name
+  attr_accessor :score
+  attr_reader :name, :bet, :hand
 
   validate :name, :presence
 
   DEFAULT_SCORE = 100
   DEFAULT_BET = 10
 
-  def initialize(name, deck)
+  def initialize(name)
     @name = name
-    @deck = deck
     @score = DEFAULT_SCORE
-    @cards = []
-    @points = [0]
+    @bet = DEFAULT_BET
+    @hand = Hand.new
     validate!
   end
 
-  def bet
-    bet = DEFAULT_BET
-    bankrupt = @score - bet < 0
-    raise NotEnoughMoney, "У игрока #{name} недостаточно средств" if bankrupt
+  def make_bet
+    return 0 if bankrupt?
 
-    @score -= bet
-    bet
+    @score -= @bet
+    @bet
   end
 
-  def points
-    @points.select { |val| val <= 21 }.max || 0
-  end
-
-  def release_cards
-    @deck.cards += @cards
-    @cards.clear
-    @points = [0]
-  end
-
-  def take_card(count = 1)
-    too_many_cards = @cards.size + count > 3
-    raise TooManyCards, 'Нельзя брать больше трех карт' if too_many_cards
-
-    count.times do
-      new_card = @deck.random_card
-      @points = @points.product(new_card.points).map(&:sum).uniq
-      @cards << new_card
-    end
+  def bankrupt?
+    @score - @bet < 0
   end
 end
