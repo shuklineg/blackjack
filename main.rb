@@ -1,4 +1,4 @@
-require_relative 'libs/cards_exceptions'
+require_relative 'libs/blackjack_exceptions'
 require_relative 'libs/validation'
 require_relative 'libs/card'
 require_relative 'libs/deck'
@@ -76,7 +76,6 @@ class Blackjack
   def round_end
     winner = who_win
     winner ? winner.score += @jackpot : split_jackpot
-    @jackpot = 0
     puts wrapped_line('Открываем карты', '***')
     print_player_status(@dealer)
     print_player_status(@player)
