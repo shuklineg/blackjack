@@ -33,6 +33,7 @@ class Blackjack
       @player = Player.new(name)
     end
     @dealer = Dealer.new
+    @partners = [@dealer, @player]
   end
 
   def start_game
@@ -42,9 +43,9 @@ class Blackjack
   end
 
   def setup_new_game
-    [@player, @dealer].each { |partner| partner.hand.release_cards(@deck) }
+    @partners.each { |partner| partner.hand.release_cards(@deck) }
+    @partners.each { |partner| partner.hand.take_card(@deck, 2) }
     @open_cards = false
-    [@player, @dealer].each { |partner| partner.hand.take_card(@deck, 2) }
   end
 
   def game
@@ -59,12 +60,12 @@ class Blackjack
   end
 
   def make_bets
-    no_maney = [@player, @dealer].select(&:bankrupt?)
+    no_maney = @partners.select(&:bankrupt?)
     no_maney.each { |partner| puts "У #{partner.name} недостаточно средств" }
     return false unless no_maney.size.zero?
 
     @jackpot = 0
-    [@player, @dealer].each { |partner| @jackpot += partner.make_bet }
+    @partners.each { |partner| @jackpot += partner.make_bet }
     true
   end
 
@@ -72,12 +73,12 @@ class Blackjack
     winner = who_win
     winner ? winner.score += @jackpot : split_jackpot
     puts wrapped_line('Открываем карты', '***')
-    [@dealer, @player].each { |partner| print_player_status(partner) }
+    @partners.each { |partner| print_player_status(partner) }
     print_congratulation(winner)
   end
 
   def split_jackpot
-    [@player, @dealer].each { |parnter| parnter.score += (@jackpot / 2) }
+    @partners.each { |parnter| parnter.score += (@jackpot / 2) }
   end
 
   def who_win
