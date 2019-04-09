@@ -6,10 +6,10 @@ class Card
     @suit = suit
     @points = points
     @points = [@points] unless @points.is_a? Array
-    @fase = face
+    @face = face
   end
 
   def to_s
-    "#{@suit} #{@fase}"
+    "#{@suit} #{@face}"
   end
 end
