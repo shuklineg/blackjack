@@ -37,7 +37,7 @@ module Validation
 
     def validate_presence(value)
       empty = value.nil? || value == ''
-      raise CardsExceptions::IsEmpty, 'Не может быть пустым' if empty
+      raise BlackjackExceptions::IsEmpty, 'Не может быть пустым' if empty
     end
   end
 end

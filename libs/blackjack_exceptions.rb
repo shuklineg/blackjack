@@ -4,7 +4,7 @@ module BlackjackExceptions
 
   def with_is_empty_handling
     yield
-  rescue CardsExceptions::IsEmpty => e
+  rescue BlackjackExceptions::IsEmpty => e
     puts e.message
     retry
   end

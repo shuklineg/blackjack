@@ -1,6 +1,6 @@
 # player class
 class Player
-  include CardsExceptions
+  include BlackjackExceptions
   include Validation
 
   DEFAULT_SCORE = 100

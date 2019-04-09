@@ -10,7 +10,7 @@ require_relative 'libs/interface_helpers'
 # Main class of the game
 class Blackjack
   include InterfaceHelpers
-  include CardsExceptions
+  include BlackjackExceptions
 
   attr_accessor :deck, :player, :dealer
 
