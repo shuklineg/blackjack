@@ -42,11 +42,9 @@ class Blackjack
   end
 
   def setup_new_game
-    @player.hand.release_cards(@deck)
-    @dealer.hand.release_cards(@deck)
+    [@player, @dealer].each { |partner| partner.hand.release_cards(@deck) }
     @open_cards = false
-    @player.hand.take_card(@deck, 2)
-    @dealer.hand.take_card(@deck, 2)
+    [@player, @dealer].each { |partner| partner.hand.take_card(@deck, 2) }
   end
 
   def game
@@ -54,22 +52,19 @@ class Blackjack
       break unless make_bets
 
       setup_new_game
-      loop do
-        break if game_round
-      end
+      game_round
       round_end
       break if ask('Вы хотите продолжить?(Д/н)').downcase.chars.first == 'н'
     end
   end
 
   def make_bets
-    puts "У #{@player.name} недостаточно средств" if @player.bankrupt?
-    puts "У #{@dealer.name} недостаточно средств" if @dealer.bankrupt?
-    return false if @player.bankrupt? || @dealer.bankrupt?
+    no_maney = [@player, @dealer].select(&:bankrupt?)
+    no_maney.each { |partner| puts "У #{partner.name} недостаточно средств" }
+    return false unless no_maney.size.zero?
 
     @jackpot = 0
-    @jackpot += @player.make_bet
-    @jackpot += @dealer.make_bet
+    [@player, @dealer].each { |partner| @jackpot += partner.make_bet }
     true
   end
 
@@ -77,14 +72,12 @@ class Blackjack
     winner = who_win
     winner ? winner.score += @jackpot : split_jackpot
     puts wrapped_line('Открываем карты', '***')
-    print_player_status(@dealer)
-    print_player_status(@player)
+    [@dealer, @player].each { |partner| print_player_status(partner) }
     print_congratulation(winner)
   end
 
   def split_jackpot
-    @player.score += (@jackpot / 2)
-    @dealer.score += (@jackpot / 2)
+    [@player, @dealer].each { |parnter| parnter.score += (@jackpot / 2) }
   end
 
   def who_win
@@ -95,12 +88,15 @@ class Blackjack
   end
 
   def game_round
-    print_dealer_status(@dealer)
-    print_player_status(@player)
-    player_choose
-    @dealer.move(@deck) unless @open_cards
-    three_cards = @player.hand.cards.size == 3 && @dealer.hand.cards.size == 3
-    @open_cards || three_cards
+    loop do
+      print_dealer_status(@dealer)
+      print_player_status(@player)
+      player_choose
+      @dealer.move(@deck) unless @open_cards
+      three_cards = @player.hand.cards.size == 3 && @dealer.hand.cards.size == 3
+
+      break if @open_cards || three_cards
+    end
   end
 
   def player_choose
