@@ -6,13 +6,20 @@ require_relative 'libs/hand'
 require_relative 'libs/player'
 require_relative 'libs/dealer'
 require_relative 'libs/interface_helpers'
+require_relative 'libs/blackjack_interface'
 
 # Main class of the game
 class Blackjack
-  include InterfaceHelpers
   include BlackjackExceptions
 
   attr_accessor :deck, :player, :dealer
+  attr_reader :ui
+
+  def initialize(user_interface)
+    @ui = user_interface
+    @deck = Deck.new
+    @dealer = Dealer.new
+  end
 
   def run
     start_game
@@ -22,23 +29,16 @@ class Blackjack
 
   private
 
-  def greetins
-    puts title('Blackjack')
-    puts wrapped_line('Добро пожаловать в игру!', '***')
-  end
-
   def setup_players
     with_is_empty_handling do
-      name = ask('Ведите свое имя?')
+      name = ui.ask_name
       @player = Player.new(name)
     end
-    @dealer = Dealer.new
     @partners = [@dealer, @player]
   end
 
   def start_game
-    greetins
-    @deck = Deck.new
+    ui.start_game
     setup_players
   end
 
@@ -46,24 +46,27 @@ class Blackjack
     @partners.each { |partner| partner.hand.release_cards(@deck) }
     @partners.each { |partner| partner.hand.take_card(@deck, 2) }
     @open_cards = false
+    make_bets
   end
 
   def game
     loop do
-      break unless make_bets
-
       setup_new_game
       game_round
       round_end
-      break if ask('Вы хотите продолжить?(Д/н)').downcase.chars.first == 'н'
+
+      break if no_money
+      break unless ui.ask_continue
     end
   end
 
-  def make_bets
-    no_maney = @partners.select(&:bankrupt?)
-    no_maney.each { |partner| puts "У #{partner.name} недостаточно средств" }
-    return false unless no_maney.size.zero?
+  def no_money
+    no_money = @partners.select(&:bankrupt?)
+    ui.no_money(no_money)
+    !no_money.size.zero?
+  end
 
+  def make_bets
     @jackpot = 0
     @partners.each { |partner| @jackpot += partner.make_bet }
     true
@@ -72,9 +75,7 @@ class Blackjack
   def round_end
     winner = who_win
     winner ? winner.score += @jackpot : split_jackpot
-    puts wrapped_line('Открываем карты', '***')
-    @partners.each { |partner| print_player_status(partner) }
-    print_congratulation(winner)
+    ui.round_end(winner, @partners)
   end
 
   def split_jackpot
@@ -90,8 +91,7 @@ class Blackjack
 
   def game_round
     loop do
-      print_dealer_status(@dealer)
-      print_player_status(@player)
+      ui.round(@partners)
       player_choose
       @dealer.move(@deck) unless @open_cards
       three_cards = @player.hand.cards.size == 3 && @dealer.hand.cards.size == 3
@@ -101,21 +101,14 @@ class Blackjack
   end
 
   def player_choose
-    get_one_char('Ваш ход: (В)зять/(О)ткрыть/(П)ропустить') do |char|
-      @open_cards = true if char == 'о'
-      puts 'Пропуск хода' if char == 'п'
-      puts 'Не больше 3х карт' if char == 'в' && !@player.hand.take_card(@deck)
-      return true if %w[о п в].include? char
-
-      false
-    end
+    selected = ui.choose(@player)
+    @open_cards = true if selected == :open
+    @player.hand.take_card(@deck) if selected == :take
   end
 
   def end_game
-    puts wrapped_line('Таблица результатов', '***')
-    print_score_table(@player, @dealer)
-    puts wrapped_line('Конец игры!', '***')
+    ui.end_game
   end
 end
 
-Blackjack.new.run
+Blackjack.new(BlackjackInterface.new).run
